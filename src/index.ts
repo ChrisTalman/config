@@ -17,6 +17,7 @@ export default class Store <Config>
 {
 	private _data: Config;
 	private initialised: boolean = false;
+	/** The stored config object. */
 	public get data()
 	{
 		if (this.initialised)
