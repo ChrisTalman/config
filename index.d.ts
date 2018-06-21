@@ -1,4 +1,4 @@
-declare module 'bluecewe__config'
+declare module '@bluecewe/config'
 {
 	export default class Store <Config>
     {
