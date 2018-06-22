@@ -1,7 +1,8 @@
 {
 	"name": "@bluecewe/config",
 	"description": "Retrieves an external config file.",
-	"version": "0.1.1",
+	"version": "0.1.2",
+	"main": "index.js",
 	"devDependencies": {
 		"@types/node": "^10.3.4",
 		"ts-loader": "^4.4.1",
