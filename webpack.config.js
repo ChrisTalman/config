@@ -29,7 +29,7 @@ module.exports =
     {
         filename: 'index.js',
         path: __dirname,
-        libraryTarget: 'commonjs'
+        libraryTarget: 'umd'
     },
     watch: true,
     module:
