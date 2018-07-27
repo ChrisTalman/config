@@ -15,12 +15,17 @@ export interface ConfigErrorParameters
 /** Store for config.json. */
 export default class Store <Config>
 {
+	private _initialised: boolean = false;
 	private _data: Config;
-	private initialised: boolean = false;
+	/** Indicates whether data has been initialised. */
+	public get initialised()
+	{
+		return this._initialised;
+	};
 	/** The stored config object. */
 	public get data()
 	{
-		if (this.initialised)
+		if (this._initialised)
 		{
 			return this._data;
 		}
@@ -32,7 +37,7 @@ export default class Store <Config>
 	/** Retrieves, parses, validates, and stores config.json. */
 	public initialise()
 	{
-		if (this.initialised)
+		if (this._initialised)
 		{
 			return this._data;
 		};
@@ -57,7 +62,7 @@ export default class Store <Config>
 			return;
 		};
 		this._data = object;
-		this.initialised = true;
+		this._initialised = true;
 		return this._data;
 	};
 };
