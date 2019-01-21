@@ -8,7 +8,7 @@ declare module '@bluecewe/config'
     export interface Options
     {
     	/** Schema by which config object should be validated. If false, data will not be validated. */
-    	schema: Joi.Schema | false;
+    	schema: Joi.Schema | object | false;
     	/** Determines whether store data is initialised at instance instantiation. Default: true. */
     	initialise?: boolean;
     }
