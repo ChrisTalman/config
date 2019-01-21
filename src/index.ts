@@ -2,21 +2,49 @@
 
 // External Modules
 import * as FileSystem from 'fs';
+import * as Joi from 'joi';
 
 // Types
+export interface Options
+{
+	/** Schema by which config object should be validated. */
+	schema?: Joi.Schema;
+	/** Determines whether store data is initialised at instance instantiation. Default: true. */
+	initialise?: boolean;
+};
 export interface ConfigErrorParameters
 {
 	message: string;
 	code: string;
 };
 
-// To Do: Allow the user to optionally provide a Joi schema to validate the config object.
+// Constants
+const OPTIONS_SCHEMA =
+{
+	schema: Joi.object().optional(),
+	initialise: Joi.boolean().default(true)
+};
 
 /** Store for config.json. */
 export default class Store <Config>
 {
 	private _initialised: boolean = false;
 	private _data: Config;
+	public readonly options: Options;
+	/** Initialises instance. */
+	constructor(options: Options = {})
+	{
+		this.options = this.validateOptions(options);
+		if (this.options.initialise) this.initialise();
+	};
+	/** Validates and transforms options. */
+	private validateOptions(options: Options)
+	{
+		const validated = Joi.validate(options, OPTIONS_SCHEMA);
+		if (validated.error) throw new ConfigError({message: validated.error.message, code: 'optionsInvalid'});
+		const transformed = validated.value;
+		return transformed;
+	};
 	/** Indicates whether data has been initialised. */
 	public get initialised()
 	{
@@ -31,7 +59,7 @@ export default class Store <Config>
 		}
 		else
 		{
-			ConfigError.throw({message: 'Config not initialised.', code: 'notInitialised'});
+			throw new ConfigError({message: 'Config not initialised.', code: 'notInitialised'});
 		};
 	};
 	/** Retrieves, parses, validates, and stores config.json. */
@@ -41,27 +69,33 @@ export default class Store <Config>
 		{
 			return this._data;
 		};
-		let file;
+		let file: string;
 		try
 		{
 			file = FileSystem.readFileSync('./config.json', {encoding: 'utf8'});
 		}
 		catch (error)
 		{
-			ConfigError.throw(error);
+			throw new ConfigError(error);
 			return;
 		};
-		let object: Config;
+		let data: Config;
 		try
 		{
-			object = JSON.parse(file);
+			data = JSON.parse(file);
 		}
 		catch (error)
 		{
-			ConfigError.throw({message: 'Failed to parse config file as JSON.', code: 'parseFailure'});
+			throw new ConfigError({message: 'Failed to parse config file as JSON.', code: 'parseFailure'});
 			return;
 		};
-		this._data = object;
+		if ('schema' in this.options)
+		{
+			const validated = Joi.validate(data, OPTIONS_SCHEMA);
+			if (validated.error)  throw new ConfigError({message: 'Config invalid.', code: 'configInvalid'});
+			data = validated.value;
+		};
+		this._data = data;
 		this._initialised = true;
 		return this._data;
 	};
@@ -71,14 +105,10 @@ export class ConfigError extends Error
 {
 	public message: string;
 	public code: string;
-	static throw(parameters: ConfigErrorParameters)
+	constructor({message, code}: {message: string, code: string})
 	{
-		throw new this(parameters);
-	};
-	constructor(parameters: ConfigErrorParameters)
-	{
-		super(parameters.message);
-		this.message = parameters.message;
-		this.code = parameters.code;
+		super(message);
+		this.message = message;
+		this.code = code;
 	};
 };
