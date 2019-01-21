@@ -7,8 +7,8 @@ import * as Joi from 'joi';
 // Types
 export interface Options
 {
-	/** Schema by which config object should be validated. */
-	schema?: Joi.Schema;
+	/** Schema by which config object should be validated. If false, data will not be validated. */
+	schema: Joi.Schema | false;
 	/** Determines whether store data is initialised at instance instantiation. Default: true. */
 	initialise?: boolean;
 };
@@ -21,7 +21,7 @@ export interface ConfigErrorParameters
 // Constants
 const OPTIONS_SCHEMA =
 {
-	schema: Joi.object().optional(),
+	schema: Joi.alternatives(Joi.object(), Joi.valid(false)).required(),
 	initialise: Joi.boolean().default(true)
 };
 
@@ -32,7 +32,7 @@ export default class Store <Config>
 	private _data: Config;
 	public readonly options: Options;
 	/** Initialises instance. */
-	constructor(options: Options = {})
+	constructor(options: Options)
 	{
 		this.options = this.validateOptions(options);
 		if (this.options.initialise) this.initialise();
@@ -89,9 +89,9 @@ export default class Store <Config>
 			throw new ConfigError({message: 'Failed to parse config file as JSON.', code: 'parseFailure'});
 			return;
 		};
-		if ('schema' in this.options)
+		if (typeof this.options.schema === 'object')
 		{
-			const validated = Joi.validate(data, OPTIONS_SCHEMA);
+			const validated = Joi.validate(data, this.options.schema);
 			if (validated.error)  throw new ConfigError({message: 'Config invalid.', code: 'configInvalid'});
 			data = validated.value;
 		};
