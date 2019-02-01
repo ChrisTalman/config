@@ -92,7 +92,7 @@ export default class Store <Config>
 		if (typeof this.options.schema === 'object')
 		{
 			const validated = Joi.validate(data, this.options.schema);
-			if (validated.error)  throw new ConfigError({message: 'Config invalid.', code: 'configInvalid'});
+			if (validated.error)  throw new ConfigError({message: 'Config invalid: ' + validated.error.message + '.', code: 'configInvalid'});
 			data = validated.value;
 		};
 		this._data = data;
