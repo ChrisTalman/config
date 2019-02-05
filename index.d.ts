@@ -11,6 +11,8 @@ declare module '@bluecewe/config'
     	schema: Joi.Schema | object | false;
     	/** Determines whether store data is initialised at instance instantiation. Default: true. */
     	initialise?: boolean;
+    	/** Path to config file. */
+    	filename: string;
     }
 	export default class Store <Config>
     {
@@ -21,6 +23,6 @@ declare module '@bluecewe/config'
 		/** The stored config object. */
 		public readonly data: Config;
 		/** Retrieves, parses, validates, and stores config.json. */
-        public initialise(): Config;
+        public initialise(): Promise<Config>;
     }
 }

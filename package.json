@@ -1,7 +1,7 @@
 {
 	"name": "@bluecewe/config",
 	"description": "Retrieves an external config file.",
-	"version": "1.0.1",
+	"version": "2.0.0",
 	"main": "index.js",
 	"devDependencies": {
 		"@types/joi": "14.0.1",

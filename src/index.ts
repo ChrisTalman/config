@@ -1,7 +1,8 @@
 'use strict';
 
 // External Modules
-import * as FileSystem from 'fs';
+import { promises as FileSystemPromises } from 'fs';
+const { readFile } = FileSystemPromises;
 import * as Joi from 'joi';
 
 // Types
@@ -11,6 +12,8 @@ export interface Options
 	schema: Joi.Schema | object | false;
 	/** Determines whether store data is initialised at instance instantiation. Default: true. */
 	initialise?: boolean;
+	/** Path to config file. */
+	file: string;
 };
 export interface ConfigErrorParameters
 {
@@ -22,7 +25,8 @@ export interface ConfigErrorParameters
 const OPTIONS_SCHEMA =
 {
 	schema: Joi.alternatives(Joi.object(), Joi.valid(false)).required(),
-	initialise: Joi.boolean().default(true)
+	initialise: Joi.boolean().default(true),
+	file: Joi.string().default('./config.json')
 };
 
 /** Store for config.json. */
@@ -63,7 +67,7 @@ export default class Store <Config>
 		};
 	};
 	/** Retrieves, parses, validates, and stores config.json. */
-	public initialise()
+	public async initialise()
 	{
 		if (this._initialised)
 		{
@@ -72,7 +76,7 @@ export default class Store <Config>
 		let file: string;
 		try
 		{
-			file = FileSystem.readFileSync('./config.json', {encoding: 'utf8'});
+			file = await readFile(this.options.file, 'utf8');
 		}
 		catch (error)
 		{
