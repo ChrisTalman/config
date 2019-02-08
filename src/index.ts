@@ -6,6 +6,7 @@ const { readFile } = FileSystemPromises;
 import * as Joi from 'joi';
 
 // Types
+import { ValidationOptions as JoiValidationOptions } from 'joi';
 export interface Options
 {
 	/** Schema by which config object should be validated. If false, data will not be validated. */
@@ -28,6 +29,10 @@ const OPTIONS_SCHEMA =
 	initialise: Joi.boolean().default(true),
 	file: Joi.string().default('./config.json')
 };
+const JOI_OPTIONS: JoiValidationOptions =
+{
+	presence: 'required'
+};
 
 /** Store for config.json. */
 export default class Store <Config>
@@ -44,7 +49,7 @@ export default class Store <Config>
 	/** Validates and transforms options. */
 	private validateOptions(options: Options)
 	{
-		const validated = Joi.validate(options, OPTIONS_SCHEMA);
+		const validated = Joi.validate(options, OPTIONS_SCHEMA, JOI_OPTIONS);
 		if (validated.error) throw new ConfigError({message: validated.error.message, code: 'optionsInvalid'});
 		const transformed = validated.value;
 		return transformed;
