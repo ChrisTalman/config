@@ -13,7 +13,7 @@ export interface Options
 	/** Determines whether store data is initialised at instance instantiation. Default: true. */
 	initialise?: boolean;
 	/** Path to config file. */
-	file: string;
+	file?: string;
 };
 export interface ConfigErrorParameters
 {

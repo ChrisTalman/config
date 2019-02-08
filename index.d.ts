@@ -12,7 +12,7 @@ declare module '@bluecewe/config'
     	/** Determines whether store data is initialised at instance instantiation. Default: true. */
     	initialise?: boolean;
     	/** Path to config file. */
-    	file: string;
+    	file?: string;
     }
 	export default class Store <Config>
     {
