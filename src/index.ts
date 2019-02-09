@@ -29,7 +29,7 @@ const OPTIONS_SCHEMA =
 	initialise: Joi.boolean().default(true),
 	file: Joi.string().default('./config.json')
 };
-const JOI_OPTIONS: JoiValidationOptions =
+const CONFIG_DATA_SCHEMA_JOI_OPTIONS: JoiValidationOptions =
 {
 	presence: 'required'
 };
@@ -49,7 +49,7 @@ export default class Store <Config>
 	/** Validates and transforms options. */
 	private validateOptions(options: Options)
 	{
-		const validated = Joi.validate(options, OPTIONS_SCHEMA, JOI_OPTIONS);
+		const validated = Joi.validate(options, OPTIONS_SCHEMA);
 		if (validated.error) throw new ConfigError({message: validated.error.message, code: 'optionsInvalid'});
 		const transformed = validated.value;
 		return transformed;
@@ -100,7 +100,7 @@ export default class Store <Config>
 		};
 		if (typeof this.options.schema === 'object')
 		{
-			const validated = Joi.validate(data, this.options.schema);
+			const validated = Joi.validate(data, this.options.schema, CONFIG_DATA_SCHEMA_JOI_OPTIONS);
 			if (validated.error)  throw new ConfigError({message: 'Config invalid: ' + validated.error.message + '.', code: 'configInvalid'});
 			data = validated.value;
 		};
