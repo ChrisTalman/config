@@ -84,7 +84,8 @@ export default class Store <Config>
 		{
 			throw new ConfigError(error);
 		};
-		this.applySource({source});
+		const data = this.applySource({source});
+		return data;
 	};
 	/** Retrieves, parses, validates, and stores config.json synchronously. */
 	public initialiseSync()
@@ -99,7 +100,8 @@ export default class Store <Config>
 		{
 			throw new ConfigError(error);
 		};
-		this.applySource({source});
+		const data = this.applySource({source});
+		return data;
 	};
 	/** Parses, validates, and stores config.json. */
 	private applySource({source}: {source: string})
