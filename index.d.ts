@@ -24,5 +24,9 @@ declare module '@bluecewe/config'
 		public readonly data: Config;
 		/** Retrieves, parses, validates, and stores config.json. */
         public initialise(): Promise<Config>;
+    	/** Retrieves, parses, validates, and stores config.json synchronously. */
+        public initialiseSync(): Config;
+    	/** Parses, validates, and stores config.json. */
+    	private applySource({source}: {source: string}): Config;
     }
 }
