@@ -1,7 +1,7 @@
 'use strict';
 
 // External Modules
-import { promises as FileSystemPromises } from 'fs';
+import { readFileSync, promises as FileSystemPromises } from 'fs';
 const { readFile } = FileSystemPromises;
 import * as Joi from 'joi';
 
@@ -44,7 +44,7 @@ export default class Store <Config>
 	constructor(options: Options)
 	{
 		this.options = this.validateOptions(options);
-		if (this.options.initialise) this.initialise();
+		if (this.options.initialise) this.initialiseSync();
 	};
 	/** Validates and transforms options. */
 	private validateOptions(options: Options)
@@ -74,29 +74,44 @@ export default class Store <Config>
 	/** Retrieves, parses, validates, and stores config.json. */
 	public async initialise()
 	{
-		if (this._initialised)
-		{
-			return this._data;
-		};
-		let file: string;
+		if (this._initialised) return this._data;
+		let source: string;
 		try
 		{
-			file = await readFile(this.options.file, 'utf8');
+			source = await readFile(this.options.file, 'utf8');
 		}
 		catch (error)
 		{
 			throw new ConfigError(error);
-			return;
 		};
+		this.applySource({source});
+	};
+	/** Retrieves, parses, validates, and stores config.json synchronously. */
+	public initialiseSync()
+	{
+		if (this._initialised) return this._data;
+		let source: string;
+		try
+		{
+			source = readFileSync(this.options.file, 'utf8');
+		}
+		catch (error)
+		{
+			throw new ConfigError(error);
+		};
+		this.applySource({source});
+	};
+	/** Parses, validates, and stores config.json. */
+	private applySource({source}: {source: string})
+	{
 		let data: Config;
 		try
 		{
-			data = JSON.parse(file);
+			data = JSON.parse(source);
 		}
 		catch (error)
 		{
 			throw new ConfigError({message: 'Failed to parse config file as JSON.', code: 'parseFailure'});
-			return;
 		};
 		if (typeof this.options.schema === 'object')
 		{
