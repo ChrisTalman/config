@@ -12,7 +12,7 @@ const SCHEMA =
 };
 
 // Config
-const config = new Config({schema: SCHEMA});
+const config = new Config({schema: SCHEMA, live: true});
 const data = config.data;
 
 log();

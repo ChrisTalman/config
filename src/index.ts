@@ -91,6 +91,8 @@ export default class Store <Config>
 	{
 		if (this._initialised) return this._proxy;
 		const data = await this.load();
+		this.listenSource();
+		this._initialised = true;
 		return data;
 	};
 	/** Loads and applies config file source. */
@@ -122,6 +124,8 @@ export default class Store <Config>
 			throw new ConfigError(error);
 		};
 		const data = this.applySource({source});
+		this.listenSource();
+		this._initialised = true;
 		return data;
 	};
 	/** Parses, validates, and stores config.json. */
@@ -144,13 +148,12 @@ export default class Store <Config>
 		};
 		this.purgeProxy();
 		this.applyDataToProxy({data});
-		this.listenSource();
-		this._initialised = true;
 		return this._proxy;
 	};
 	/** Listens to changes to config file. */
 	private listenSource()
 	{
+		if (!this.options.live) return;
 		const gaze = new Gaze(this.options.file);
 		gaze.on('all', (changeType) => this.handleSourceChange(changeType));
 	};
