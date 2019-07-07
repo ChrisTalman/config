@@ -3,9 +3,11 @@
 // External Modules
 import { readFileSync, promises as FileSystemPromises } from 'fs';
 const { readFile } = FileSystemPromises;
-import * as Joi from 'joi';
+import Joi from 'joi';
+import { Gaze } from 'gaze';
 
 // Types
+import { ChangeType as GazeChangeType } from 'gaze';
 import { ValidationOptions as JoiValidationOptions } from 'joi';
 export interface Options
 {
@@ -15,6 +17,8 @@ export interface Options
 	initialise?: boolean;
 	/** Path to config file. */
 	file?: string;
+	/** Config data object is updated as changes are applied to the config file. */
+	live?: boolean;
 };
 export interface ConfigErrorParameters
 {
@@ -26,8 +30,13 @@ export interface ConfigErrorParameters
 const OPTIONS_SCHEMA =
 {
 	schema: Joi.alternatives(Joi.object(), Joi.valid(false)).required(),
-	initialise: Joi.boolean().default(true),
-	file: Joi.string().default('./config.json')
+	initialise: Joi.boolean().default(true).optional(),
+	file: Joi.string().default('./config.json').optional(),
+	live: Joi.boolean().default(false).optional()
+};
+const JOI_OPTIONS: Joi.ValidationOptions =
+{
+	presence: 'required'
 };
 const CONFIG_DATA_SCHEMA_JOI_OPTIONS: JoiValidationOptions =
 {
@@ -38,18 +47,24 @@ const CONFIG_DATA_SCHEMA_JOI_OPTIONS: JoiValidationOptions =
 export default class Store <Config>
 {
 	private _initialised: boolean = false;
-	private _data: Config;
+	/** Live object containing current data. */
+	private readonly _proxy: Config = {} as Config;
 	public readonly options: Options;
 	/** Initialises instance. */
 	constructor(options: Options)
 	{
 		this.options = this.validateOptions(options);
 		if (this.options.initialise) this.initialiseSync();
+		this.listenUnhandledRejections();
 	};
 	/** Validates and transforms options. */
 	private validateOptions(options: Options)
 	{
-		const validated = Joi.validate(options, OPTIONS_SCHEMA);
+		if (typeof options !== 'object' || options === null)
+		{
+			throw new Error('Constructor must specify \'options\' object.');
+		};
+		const validated = Joi.validate(options, OPTIONS_SCHEMA, JOI_OPTIONS);
 		if (validated.error) throw new ConfigError({message: validated.error.message, code: 'optionsInvalid'});
 		const transformed = validated.value;
 		return transformed;
@@ -64,7 +79,7 @@ export default class Store <Config>
 	{
 		if (this._initialised)
 		{
-			return this._data;
+			return this._proxy;
 		}
 		else
 		{
@@ -74,7 +89,13 @@ export default class Store <Config>
 	/** Retrieves, parses, validates, and stores config.json. */
 	public async initialise()
 	{
-		if (this._initialised) return this._data;
+		if (this._initialised) return this._proxy;
+		const data = await this.load();
+		return data;
+	};
+	/** Loads and applies config file source. */
+	private async load()
+	{
 		let source: string;
 		try
 		{
@@ -90,7 +111,7 @@ export default class Store <Config>
 	/** Retrieves, parses, validates, and stores config.json synchronously. */
 	public initialiseSync()
 	{
-		if (this._initialised) return this._data;
+		if (this._initialised) return this._proxy;
 		let source: string;
 		try
 		{
@@ -118,12 +139,64 @@ export default class Store <Config>
 		if (typeof this.options.schema === 'object')
 		{
 			const validated = Joi.validate(data, this.options.schema, CONFIG_DATA_SCHEMA_JOI_OPTIONS);
-			if (validated.error)  throw new ConfigError({message: 'Config invalid: ' + validated.error.message + '.', code: 'configInvalid'});
+			if (validated.error) throw new ConfigError({message: 'Config invalid: ' + validated.error.message + '.', code: 'configInvalid'});
 			data = validated.value;
 		};
-		this._data = data;
+		this.purgeProxy();
+		this.applyDataToProxy({data});
+		this.listenSource();
 		this._initialised = true;
-		return this._data;
+		return this._proxy;
+	};
+	/** Listens to changes to config file. */
+	private listenSource()
+	{
+		const gaze = new Gaze(this.options.file);
+		gaze.on('all', (changeType) => this.handleSourceChange(changeType));
+	};
+	/** Handles changes to config file. */
+	private async handleSourceChange(changeType: GazeChangeType)
+	{
+		if (changeType === 'added' || changeType === 'changed')
+		{
+			await this.load();
+		}
+		else if (changeType === 'deleted')
+		{
+			throw new ConfigError({message: 'Config file deleted.', code: 'fileDeleted'});
+		}
+		else
+		{
+			throw new ConfigError({message: 'Unexpected file change type.', code: 'unexpected'});
+		};
+	};
+	/** Assigns properties from data object to proxy object as computed properties through get() methods. */
+	private applyDataToProxy({data}: {data: Config})
+	{
+		for (let { 0: key, 1: value } of Object.entries(data))
+		{
+			this._proxy[key] = value;
+		};
+	};
+	/** Deletes all members in proxy object, leaving it completely empty. */
+	private purgeProxy()
+	{
+		const keys = Object.keys(this._proxy);
+		for (let key of keys)
+		{
+			delete this._proxy[key];
+		};
+	};
+	/** Listen to unhandled promise rejections. */
+	private listenUnhandledRejections()
+	{
+		process.on('unhandledRejection', this.throwUnhandledRejection);
+	};
+	/** Throw an unahandled promise rejection as an exception. */
+	private throwUnhandledRejection(rejection)
+	{
+		if (!(rejection instanceof ConfigError)) return;
+		throw rejection;
 	};
 };
 

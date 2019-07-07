@@ -13,6 +13,8 @@ declare module '@bluecewe/config'
     	initialise?: boolean;
     	/** Path to config file. */
     	file?: string;
+    	/** Config data object is updated as changes are applied to the config file. */
+    	live?: boolean;
     }
 	export default class Store <Config>
     {
