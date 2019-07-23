@@ -7,6 +7,9 @@ import { join as joinPath } from 'path';
 import Joi from 'joi';
 import { Gaze } from 'gaze';
 
+// Internal Modules
+import { suppressSpuriousPermissionErrors } from './SuppressSpuriousPermissionError';
+
 // Types
 import { ChangeType as GazeChangeType } from 'gaze';
 import { ValidationOptions as JoiValidationOptions } from 'joi';
@@ -56,6 +59,7 @@ export default class Store <Config>
 	constructor(options: Options)
 	{
 		this.options = this.validateOptions(options);
+		suppressSpuriousPermissionErrors();
 		if (this.options.initialise) this.initialiseSync();
 		this.listenUnhandledRejections();
 	};
