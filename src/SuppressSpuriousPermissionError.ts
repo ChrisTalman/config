@@ -35,6 +35,6 @@ function handleUncaughtException(error)
 		permissionError.filename === null
 	;
 	if (isSpurious) return;
-	console.error(error);
+	console.error(error.stack || error);
 	process.exit(1);
 };
