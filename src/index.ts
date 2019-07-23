@@ -3,6 +3,7 @@
 // External Modules
 import { readFileSync, promises as FileSystemPromises } from 'fs';
 const { readFile } = FileSystemPromises;
+import { join as joinPath } from 'path';
 import Joi from 'joi';
 import { Gaze } from 'gaze';
 
@@ -50,6 +51,7 @@ export default class Store <Config>
 	/** Live object containing current data. */
 	private readonly _proxy: Config = {} as Config;
 	public readonly options: Options;
+	private filePathExpression: RegExp;
 	/** Initialises instance. */
 	constructor(options: Options)
 	{
@@ -154,12 +156,15 @@ export default class Store <Config>
 	private listenSource()
 	{
 		if (!this.options.live) return;
+		this.filePathExpression = new RegExp('^' + joinPath(process.cwd(), this.options.file) + '$');
 		const gaze = new Gaze(this.options.file);
-		gaze.on('all', (changeType) => this.handleSourceChange(changeType));
+		gaze.on('all', (changeType, filePath) => this.handleSourceChange({changeType, filePath}));
 	};
 	/** Handles changes to config file. */
-	private async handleSourceChange(changeType: GazeChangeType)
+	private async handleSourceChange({changeType, filePath}: {changeType: GazeChangeType, filePath: string})
 	{
+		const relevantFilePath = this.filePathExpression.test(filePath);
+		if (!relevantFilePath) return;
 		if (changeType === 'added' || changeType === 'changed')
 		{
 			await this.load();
