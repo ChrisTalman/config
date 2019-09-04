@@ -144,7 +144,7 @@ export default class Store <Config>
 		}
 		catch (error)
 		{
-			throw new ConfigError({message: 'Failed to parse config file as JSON.', code: 'parseFailure'});
+			throw new ConfigError({message: 'Failed to parse config file as JSON: ' + error.message, code: 'parseFailure'});
 		};
 		if (typeof this.options.schema === 'object')
 		{
