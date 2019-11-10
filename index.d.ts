@@ -3,7 +3,7 @@
 // External Modules
 import * as Joi from 'joi';
 
-declare module '@ChrisTalman/config'
+declare module '@chris-talman/config'
 {
     export interface Options
     {
