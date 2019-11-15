@@ -1,6 +1,7 @@
 /// <types="joi">
 
 // External Modules
+import { EventEmitter } from 'events';
 import * as Joi from 'joi';
 
 declare module '@chris-talman/config'
@@ -16,7 +17,7 @@ declare module '@chris-talman/config'
     	/** Config data object is updated as changes are applied to the config file. */
     	live?: boolean;
     }
-	export default class Store <Config>
+	export default class Store <Config> extends EventEmitter
     {
         /** Initialises instance. */
     	constructor(options: Options);
@@ -30,5 +31,7 @@ declare module '@chris-talman/config'
         public initialiseSync(): Config;
     	/** Parses, validates, and stores config.json. */
     	private applySource({source}: {source: string}): Config;
+        /** Add event listener. */
+        public on(eventName: 'loaded', callback: (config: Store <Config>) => void): this;
     }
 }

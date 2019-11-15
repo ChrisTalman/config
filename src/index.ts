@@ -4,6 +4,7 @@
 import { readFileSync, promises as FileSystemPromises } from 'fs';
 const { readFile } = FileSystemPromises;
 import { join as joinPath } from 'path';
+import EventEmitter from 'events';
 import Joi from 'joi';
 import { Gaze } from 'gaze';
 
@@ -48,7 +49,7 @@ const CONFIG_DATA_SCHEMA_JOI_OPTIONS: JoiValidationOptions =
 };
 
 /** Store for config.json. */
-export default class Store <Config>
+export default class Store <Config> extends EventEmitter
 {
 	private _initialised: boolean = false;
 	/** Live object containing current data. */
@@ -58,6 +59,7 @@ export default class Store <Config>
 	/** Initialises instance. */
 	constructor(options: Options)
 	{
+		super();
 		this.options = this.validateOptions(options);
 		suppressSpuriousPermissionErrors();
 		if (this.options.initialise) this.initialiseSync();
@@ -114,6 +116,7 @@ export default class Store <Config>
 			throw new ConfigError(error);
 		};
 		const data = this.applySource({source});
+		this.emit('loaded', this);
 		return data;
 	};
 	/** Retrieves, parses, validates, and stores config.json synchronously. */
@@ -132,6 +135,7 @@ export default class Store <Config>
 		const data = this.applySource({source});
 		this.listenSource();
 		this._initialised = true;
+		this.emit('loaded', this);
 		return data;
 	};
 	/** Parses, validates, and stores config.json. */
