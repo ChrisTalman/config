@@ -14,17 +14,21 @@ import { suppressSpuriousPermissionErrors } from './SuppressSpuriousPermissionEr
 // Types
 import { ChangeType as GazeChangeType } from 'gaze';
 import { ValidationOptions as JoiValidationOptions } from 'joi';
+import { RequireSome } from '@chris-talman/types-helpers';
 export interface Options
 {
-	/** Schema by which config object should be validated. If false, data will not be validated. */
+	/** Schema to validate config. If `false`, no validation will occur. */
 	schema: Joi.Schema | object | false;
-	/** Determines whether store data is initialised at instance instantiation. Default: true. */
+	/** Determines whether data is initialised at instance instantiation. Default: `true`. */
 	initialise?: boolean;
-	/** Path to config file. */
+	/** Custom path to config file. */
 	file?: string;
-	/** Config data object is updated as changes are applied to the config file. */
+	/** Config data object is updated as changes are applied to the config file. Default: `false`. */
 	live?: boolean;
+	/** If specified, this is treated as raw JSON source for the conifg, instead of the default behaviour of reading from the file system. */
+	source?: string;
 };
+interface ParsedOptions extends RequireSome<Options, 'initialise' | 'file' | 'live'> {};
 export interface ConfigErrorParameters
 {
 	message: string;
@@ -37,7 +41,8 @@ const OPTIONS_SCHEMA =
 	schema: Joi.alternatives(Joi.object(), Joi.valid(false)).required(),
 	initialise: Joi.boolean().default(true).optional(),
 	file: Joi.string().default('./config.json').optional(),
-	live: Joi.boolean().default(false).optional()
+	live: Joi.boolean().default(false).optional(),
+	source: Joi.string().optional()
 };
 const JOI_OPTIONS: Joi.ValidationOptions =
 {
@@ -51,10 +56,12 @@ const CONFIG_DATA_SCHEMA_JOI_OPTIONS: JoiValidationOptions =
 /** Store for config.json. */
 export default class Store <Config> extends EventEmitter
 {
+	/** The Joi class used by the module for validation. */
+	public static Joi = Joi;
 	private _initialised: boolean = false;
 	/** Live object containing current data. */
 	private readonly _proxy: Config = {} as Config;
-	public readonly options: Options;
+	public readonly options: ParsedOptions;
 	private filePathExpression: RegExp;
 	/** Initialises instance. */
 	constructor(options: Options)
@@ -74,7 +81,7 @@ export default class Store <Config> extends EventEmitter
 		};
 		const validated = Joi.validate(options, OPTIONS_SCHEMA, JOI_OPTIONS);
 		if (validated.error) throw new ConfigError({message: validated.error.message, code: 'optionsInvalid'});
-		const transformed = validated.value;
+		const transformed = validated.value as ParsedOptions;
 		return transformed;
 	};
 	/** Indicates whether data has been initialised. */
@@ -124,16 +131,26 @@ export default class Store <Config> extends EventEmitter
 	{
 		if (this._initialised) return this._proxy;
 		let source: string;
-		try
+		if (typeof this.options.source === 'string')
 		{
-			source = readFileSync(this.options.file, 'utf8');
+			source = this.options.source;
 		}
-		catch (error)
+		else
 		{
-			throw new ConfigError(error);
+			try
+			{
+				source = readFileSync(this.options.file, 'utf8');
+			}
+			catch (error)
+			{
+				throw new ConfigError(error);
+			};
 		};
 		const data = this.applySource({source});
-		this.listenSource();
+		if (typeof this.options.source !== 'string')
+		{
+			this.listenSource();
+		};
 		this._initialised = true;
 		this.emit('loaded', this);
 		return data;
@@ -209,7 +226,7 @@ export default class Store <Config> extends EventEmitter
 		process.on('unhandledRejection', this.throwUnhandledRejection);
 	};
 	/** Throw an unahandled promise rejection as an exception. */
-	private throwUnhandledRejection(rejection)
+	private throwUnhandledRejection(rejection: any)
 	{
 		if (!(rejection instanceof ConfigError)) return;
 		throw rejection;

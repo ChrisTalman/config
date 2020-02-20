@@ -8,17 +8,21 @@ declare module '@chris-talman/config'
 {
     export interface Options
     {
-    	/** Schema by which config object should be validated. If false, data will not be validated. */
+    	/** Schema to validate config. If `false`, no validation will occur. */
     	schema: Joi.Schema | object | false;
-    	/** Determines whether store data is initialised at instance instantiation. Default: true. */
+    	/** Determines whether data is initialised at instance instantiation. Default: `true`. */
     	initialise?: boolean;
-    	/** Path to config file. */
+    	/** Custom path to config file. */
     	file?: string;
-    	/** Config data object is updated as changes are applied to the config file. */
+    	/** Config data object is updated as changes are applied to the config file. Default: `false`. */
     	live?: boolean;
+    	/** If specified, this is treated as raw JSON source for the conifg, instead of the default behaviour of reading from the file system. */
+    	source?: string;
     }
 	export default class Store <Config> extends EventEmitter
     {
+    	/** The Joi class used by the module for validation. */
+    	public static Joi: typeof Joi;
         /** Initialises instance. */
     	constructor(options: Options);
         /** Indicates whether data has been initialised. */
@@ -29,8 +33,6 @@ declare module '@chris-talman/config'
         public initialise(): Promise<Config>;
     	/** Retrieves, parses, validates, and stores config.json synchronously. */
         public initialiseSync(): Config;
-    	/** Parses, validates, and stores config.json. */
-    	private applySource({source}: {source: string}): Config;
         /** Add event listener. */
         public on(eventName: 'loaded', callback: (config: Store <Config>) => void): this;
     }

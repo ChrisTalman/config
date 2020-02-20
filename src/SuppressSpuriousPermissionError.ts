@@ -14,7 +14,7 @@ export function suppressSpuriousPermissionErrors()
 	process.on('uncaughtException', handleUncaughtException);
 };
 
-function handleUncaughtException(error)
+function handleUncaughtException(error: any)
 {
 	const permissionError: PermissionError = error;
 	const isSpurious =

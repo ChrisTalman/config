@@ -1,26 +1,26 @@
 {
-    "compilerOptions":
-    {
-        "target": "es2015",
-        "module": "ES6",
-        "moduleResolution": "node",
-        "baseUrl": "./",
-        "outDir": "./build/",
+	"compilerOptions":
+	{
+		"target": "es2015",
+		"module": "ES6",
+		"moduleResolution": "node",
+		"baseUrl": "./",
+		"outDir": "./build/",
 		"lib":
 		[
 			"es2015",
 			"es2017"
 		],
-        "removeComments": true,
-        "downlevelIteration": true,
-        "alwaysStrict": true,
-        "allowJs": true,
-        "allowSyntheticDefaultImports": true,
-        "allowUnreachableCode": true,
-        "watch": true
-    },
-    "include":
-    [
-        "src/**/*"
-    ]
+		"removeComments": true,
+		"downlevelIteration": true,
+		"alwaysStrict": true,
+		"allowJs": true,
+		"allowSyntheticDefaultImports": true,
+		"strictNullChecks": true,
+		"watch": true
+	},
+	"include":
+	[
+		"src/**/*"
+	]
 }
