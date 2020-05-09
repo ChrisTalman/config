@@ -1,7 +1,7 @@
 'use strict';
 
 // External Modules
-const Joi = require('joi');
+const Joi = require('@hapi/joi');
 const { default: Config } = require('../../index.js');
 
 // Schema
