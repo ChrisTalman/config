@@ -79,7 +79,7 @@ export default class Store <Config> extends EventEmitter
 		{
 			throw new Error('Constructor must specify \'options\' object.');
 		};
-		const validated = Joi.compile(options).validate(OPTIONS_SCHEMA, JOI_OPTIONS);
+		const validated = Joi.compile(OPTIONS_SCHEMA).validate(options, JOI_OPTIONS);
 		if (validated.error) throw new ConfigError({message: validated.error.message, code: 'optionsInvalid'});
 		const transformed = validated.value as ParsedOptions;
 		return transformed;
@@ -169,7 +169,7 @@ export default class Store <Config> extends EventEmitter
 		};
 		if (typeof this.options.schema === 'object')
 		{
-			const validated = Joi.compile(data).validate(this.options.schema, CONFIG_DATA_SCHEMA_JOI_OPTIONS);
+			const validated = Joi.compile(this.options.schema).validate(data, CONFIG_DATA_SCHEMA_JOI_OPTIONS);
 			if (validated.error) throw new ConfigError({message: 'Config invalid: ' + validated.error.message + '.', code: 'configInvalid'});
 			data = validated.value;
 		};
