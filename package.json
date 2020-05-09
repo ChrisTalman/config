@@ -1,7 +1,7 @@
 {
 	"name": "@chris-talman/config",
 	"description": "Provides interface for external config file",
-	"version": "4.0.0",
+	"version": "4.0.1",
 	"devDependencies": {
 		"@chris-talman/types-helpers": "2.0.2",
 		"@types/hapi__joi": "16.0.12",
