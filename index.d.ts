@@ -2,7 +2,7 @@
 
 // External Modules
 import { EventEmitter } from 'events';
-import * as Joi from 'joi';
+import * as Joi from '@hapi/joi';
 
 declare module '@chris-talman/config'
 {
